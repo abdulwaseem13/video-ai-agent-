@@ -1,4 +1,6 @@
 import os
+import cv2
+from PIL import Image
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -8,20 +10,33 @@ load_dotenv()
 
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 
-model = genai.GenerativeModel("gemini-1.5-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 
 class GeminiProvider:
 
-    def describe(self, image_path):
+    def analyze(self, frame, question):
+
+        if frame is None:
+            return "No frame available."
+
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+
+        image = Image.fromarray(rgb)
+
+        prompt = f"""
+{VISION_PROMPT}
+
+User Question:
+
+{question}
+"""
 
         try:
 
-            image = genai.upload_file(image_path)
-
             response = model.generate_content(
                 [
-                    VISION_PROMPT,
+                    prompt,
                     image
                 ]
             )
@@ -30,6 +45,6 @@ class GeminiProvider:
 
         except Exception as e:
 
-            print(f"Vision Error: {e}")
+            print(e)
 
             return "Unable to analyze the image."

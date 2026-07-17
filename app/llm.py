@@ -2,78 +2,83 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 
-# Load .env variables
 load_dotenv()
 
-# Create Groq client
 client = Groq(
     api_key=os.getenv("GROQ_API_KEY")
 )
 
-MODEL_NAME = os.getenv("MODEL_NAME", "llama-3.3-70b-versatile")
+MODEL_NAME = os.getenv(
+    "MODEL_NAME",
+    "llama-3.3-70b-versatile"
+)
 
 
-def ask_ai(objects, question, history, scene_description):
+def ask_ai(objects, prompt, history, scene_description):
 
-    scene = ""
+    object_list = []
 
     for obj in objects:
-        scene += (
+
+        object_list.append(
             f"- {obj['name']} "
             f"(ID={obj.get('id', 'N/A')}, "
-            f"confidence={obj['confidence']}, "
-            f"position=({obj['center_x']}, {obj['center_y']}))\n"
+            f"Confidence={obj['confidence']:.2f}, "
+            f"Position=({obj['center_x']}, {obj['center_y']}))"
         )
 
-    messages = [
-        {
-            "role": "system",
-            "content": """
-You are an intelligent AI Vision Assistant.
+    object_text = "\n".join(object_list)
 
-You have four sources of information:
+    system_prompt = f"""
+You are an Advanced AI Desktop Assistant.
 
-1. Conversation history.
-2. Current scene description.
-3. Current detected objects.
-4. The user's latest question.
+You can understand:
 
-Always use the conversation history to answer follow-up questions.
+- Conversation History
+- OCR Text
+- Vision Description
+- YOLO Detected Objects
+- User Questions
 
-Never say "I haven't described anything yet" if the answer exists in the conversation history.
+Rules:
 
-If something cannot be determined from the image, say so honestly.
+1. Use conversation history whenever useful.
+2. Use OCR text if available.
+3. Use vision description if available.
+4. Use detected objects when relevant.
+5. Never hallucinate.
+6. If information is unavailable, clearly say so.
+7. Give concise but helpful answers.
 
-Do not invent information.
-"""
-        }
-    ]
-
-    # Add previous conversation
-    messages.extend(history)
-
-    # Add the current user question
-    messages.append({
-        "role": "user",
-        "content": f"""
 Current Scene Description:
 
 {scene_description}
 
 Detected Objects:
 
-{scene}
-
-Question:
-
-{question}
+{object_text}
 """
-    })
+
+    messages = [
+        {
+            "role": "system",
+            "content": system_prompt
+        }
+    ]
+
+    messages.extend(history)
+
+    messages.append(
+        {
+            "role": "user",
+            "content": prompt
+        }
+    )
 
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=messages,
-        temperature=0.3
+        temperature=0.3,
     )
 
     return response.choices[0].message.content

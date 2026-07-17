@@ -6,37 +6,65 @@ from capture.source_manager import SourceManager
 from voice.voice_assistant import VoiceAssistant
 
 
-assistant = Assistant()
+def main():
 
-# Ask user which vision source to use
-source = SourceManager().select_source()
+    assistant = Assistant()
 
-# Create camera with selected source
-camera = Camera(assistant, source)
+    # Select capture source
+    source = SourceManager().select_source()
 
-assistant.set_camera(camera)
+    camera = Camera(
+        assistant=assistant,
+        source=source
+    )
+
+    assistant.set_camera(camera)
+
+    camera_worker = threading.Thread(
+        target=camera.start,
+        daemon=True
+    )
+
+    camera_worker.start()
+
+    voice = VoiceAssistant()
+
+    print("\n🎤 Voice Assistant Ready")
+    print("Say 'exit', 'quit', or 'stop' to close.\n")
+
+    try:
+
+        while True:
+
+            question = voice.listen()
+
+            if not question:
+                continue
+
+            if question.lower() in [
+                "exit",
+                "quit",
+                "stop"
+            ]:
+
+                voice.speak("Goodbye!")
+
+                break
+
+            answer = assistant.ask(question)
+
+            print(f"\n🤖 AI: {answer}\n")
+
+            voice.speak(answer)
+
+    except KeyboardInterrupt:
+
+        print("\nStopping...")
+
+    finally:
+
+        camera.stop()
 
 
-def camera_thread():
-    camera.start()
-
-
-thread = threading.Thread(target=camera_thread)
-thread.daemon = True
-thread.start()
-
-voice = VoiceAssistant()
-
-while True:
-
-    question = voice.listen()
-
-    if question.lower() in ["exit", "quit", "stop"]:
-        voice.speak("Goodbye!")
-        break
-
-    answer = assistant.ask(question)
-
-    print(f"\n🤖 AI: {answer}")
-
-    voice.speak(answer)
+if __name__ == "__main__":
+    main()

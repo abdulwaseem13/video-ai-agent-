@@ -1,15 +1,27 @@
+import cv2
+
 from llm import ask_ai
-from vision_ai import analyze_image
 from router import requires_vision
+
 from memory import ConversationMemory
 from scene_memory import SceneMemory
 from scene_graph import SceneGraph
 from event_manager import EventManager
-from person_memory import PersonMemory 
+from person_memory import PersonMemory
+
+# New Modules
+from context.builder import ContextBuilder
+from context.prompt_builder import PromptBuilder
+from ocr.reader import OCRReader
+
+# Temporary (Gemini -> OpenRouter later)
+from vision.provider import VisionProvider
+
 
 class Assistant:
 
     def __init__(self):
+
         self.objects = []
         self.camera = None
 
@@ -18,7 +30,12 @@ class Assistant:
         self.scene_graph = SceneGraph()
         self.event_manager = EventManager()
         self.person_memory = PersonMemory()
-        
+        self.vision = VisionProvider()
+
+        # New
+        self.context_builder = ContextBuilder()
+        self.prompt_builder = PromptBuilder()
+        self.ocr = OCRReader()
 
     def set_camera(self, camera):
         self.camera = camera
@@ -31,41 +48,70 @@ class Assistant:
 
     def ask(self, question):
 
-    # Save the user's question
         self.memory.add("user", question)
 
-        # Vision questions
+        if self.camera is None:
+            answer = "Camera is not connected."
+
+            self.memory.add("assistant", answer)
+            return answer
+
+        frame = self.camera.get_latest_frame()
+
+        if frame is None:
+            answer = "No frame available."
+
+            self.memory.add("assistant", answer)
+            return answer
+
+        # -----------------------------
+        # OCR
+        # -----------------------------
+        ocr_text = self.ocr.read(frame)
+
+        # -----------------------------
+        # Vision
+        # -----------------------------
+        scene_description = ""
+
         if requires_vision(question):
 
-            if self.camera is None:
-                answer = "Camera is not connected."
-            else:
-                frame = self.camera.get_latest_frame()
-
-                if frame is None:
-                    answer = "No camera frame available."
-                else:
-                    answer = analyze_image(frame, question)
-
-                    self.scene_memory.update(
-                        answer,
-                        self.objects
-                    )
-
-        else:
-
-            # YOLO questions
-            if not self.objects:
-                answer = "I don't see any objects."
-            else:
-                answer = ask_ai(
-                    self.objects,
-                    question,
-                    self.memory.get_history(),
-                    self.scene_memory.get_description()
+            try:
+                scene_description = self.vision.analyze(
+                    frame,
+                    question
                 )
+            except Exception as e:
+                print(e)
 
-        # Save the AI's answer
+        # -----------------------------
+        # Context
+        # -----------------------------
+        context = self.context_builder.build(
+            question=question,
+            objects=self.objects,
+            ocr_text=ocr_text,
+            scene_description=scene_description,
+            history=self.memory.get_history()
+        )
+
+        prompt = self.prompt_builder.build(context)
+
+        # -----------------------------
+        # LLM
+        # -----------------------------
+        answer = ask_ai(
+            self.objects,
+            prompt,
+            self.memory.get_history(),
+            self.scene_memory.get_description()
+        )
+
+        self.scene_memory.update(
+            scene_description,
+            self.objects
+        )
+
         self.memory.add("assistant", answer)
 
         return answer

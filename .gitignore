@@ -1,23 +1,5 @@
-# Virtual environment
 .venv/
 venv/
-ENV/
-
-# Python cache
-**/__pycache__/
+__pycache__/
 *.pyc
-*.pyo
-*.pyd
-
-# Environment variables / secrets
 .env
-.env.*
-
-# Temporary / OS files
-current_frame.jpg
-temp_audio.wav
-.DS_Store
-Thumbs.db
-
-# Large models
-models/
