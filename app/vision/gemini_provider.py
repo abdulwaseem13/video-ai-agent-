@@ -4,7 +4,7 @@ from PIL import Image
 from dotenv import load_dotenv
 import google.generativeai as genai
 
-from vision.prompt import VISION_PROMPT
+from app.vision.prompt import VISION_PROMPT
 
 load_dotenv()
 

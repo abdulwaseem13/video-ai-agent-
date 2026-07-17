@@ -82,3 +82,37 @@ Detected Objects:
     )
 
     return response.choices[0].message.content
+
+def ask_from_prompt(prompt, history):
+
+    messages = [
+
+        {
+            "role": "system",
+            "content":
+            "You are an intelligent Desktop AI Assistant."
+        }
+
+    ]
+
+    messages.extend(history)
+
+    messages.append({
+
+        "role": "user",
+
+        "content": prompt
+
+    })
+
+    response = client.chat.completions.create(
+
+        model=MODEL_NAME,
+
+        messages=messages,
+
+        temperature=0.3
+
+    )
+
+    return response.choices[0].message.content

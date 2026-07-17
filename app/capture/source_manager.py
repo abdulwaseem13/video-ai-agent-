@@ -1,6 +1,6 @@
-from capture.webcam import WebcamCapture
-from capture.screen import ScreenCapture
-from capture.window import WindowCapture
+from app.capture.webcam import WebcamCapture
+from app.capture.screen import ScreenCapture
+from app.capture.window import WindowCapture
 
 
 class SourceManager:

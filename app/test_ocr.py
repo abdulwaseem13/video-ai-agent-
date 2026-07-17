@@ -1,5 +1,5 @@
 import cv2
-from ocr.reader import OCRReader
+from app.ocr.reader import OCRReader
 
 image = cv2.imread("current_frame.jpg")
 

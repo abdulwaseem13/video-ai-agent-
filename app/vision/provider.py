@@ -1,4 +1,4 @@
-from vision.gemini_provider import GeminiProvider
+from app.vision.gemini_provider import GeminiProvider
 
 
 class VisionProvider:
