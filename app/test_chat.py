@@ -1,8 +1,8 @@
 import threading
 
-from assistant import Assistant
-from camera import Camera
-from capture.source_manager import SourceManager
+from app.assistant import Assistant
+from app.camera import Camera
+from app.capture.source_manager import SourceManager
 
 
 def main():
