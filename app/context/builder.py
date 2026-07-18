@@ -1,4 +1,5 @@
 from app.router import route
+from app.status import Status
 
 class ContextBuilder:
 
@@ -6,6 +7,8 @@ class ContextBuilder:
         self.assistant = assistant
 
     def build(self, question):
+
+        Status.update("Understanding your request...")
 
         intents = route(question)
 
@@ -35,6 +38,8 @@ class ContextBuilder:
 
         if self.assistant.camera:
 
+            Status.update("Capturing image...")
+
             frame = self.assistant.camera.get_latest_frame()
 
         # ---------------- Vision ----------------
@@ -42,6 +47,8 @@ class ContextBuilder:
         # ---------------- Vision ----------------
 
         if "vision" in intents and frame is not None:
+
+            Status.update("Analyzing image...")
 
             if self.assistant.scene_cache.has_changed(frame):
 
@@ -58,11 +65,13 @@ class ContextBuilder:
             else:
 
                 context["vision"] = self.assistant.scene_cache.get()
-                print("📸 Calling Gemini Vision...")
+                print("📸 Calling cached Vision...")
 
         # ---------------- OCR ----------------
 
         if "ocr" in intents and frame is not None:
+
+            Status.update("Reading screen...")
 
             try:
 

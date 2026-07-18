@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from groq import Groq
+from app.status import Status
 
 load_dotenv()
 
@@ -75,11 +76,15 @@ Detected Objects:
         }
     )
 
+    Status.update("Thinking...")
+
     response = client.chat.completions.create(
         model=MODEL_NAME,
         messages=messages,
         temperature=0.3,
     )
+
+    status.done()
 
     return response.choices[0].message.content
 

@@ -9,6 +9,7 @@ from app.vision.provider import VisionProvider
 from app.context.builder import ContextBuilder
 from app.context.prompt_builder import PromptBuilder
 from app.cache.scene_cache import SceneCache
+from app.status import Status
 
 class Assistant:
 
@@ -42,32 +43,31 @@ class Assistant:
 
     def ask(self, question):
 
-        # Store user message
         self.memory.add("user", question)
 
-        # Build context
+        Status.update("Understanding your question...")
+
         context = self.context_builder.build(question)
 
-        # Update scene memory if Vision was used
         if context["vision"]:
+            Status.update("Analyzing image...")
+
             self.scene_memory.update(
                 context["vision"],
                 self.objects
             )
 
-        # Build prompt
+        Status.update("Generating response...")
+
         prompt = self.prompt_builder.build(context)
 
-        # Ask Groq
         answer = ask_from_prompt(
             prompt,
             self.memory.get_history()
         )
 
-        # Save AI response
-        self.memory.add(
-            "assistant",
-            answer
-        )
+        self.memory.add("assistant", answer)
+
+        Status.done()
 
         return answer

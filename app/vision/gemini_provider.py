@@ -2,6 +2,7 @@ import os
 import cv2
 from PIL import Image
 from dotenv import load_dotenv
+from app.status import Status
 import google.generativeai as genai
 
 from app.vision.prompt import VISION_PROMPT
@@ -33,6 +34,8 @@ User Question:
 """
 
         try:
+
+            Status.update("Waiting for Gemini Vision...")
 
             response = model.generate_content(
                 [
