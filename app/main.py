@@ -2,8 +2,8 @@ import threading
 
 from app.assistant import Assistant
 from app.camera import Camera
-from capture.source_manager import SourceManager
-from voice.voice_assistant import VoiceAssistant
+from app.capture.source_manager import SourceManager
+from app.voice.voice_assistant import VoiceAssistant
 
 
 def main():
